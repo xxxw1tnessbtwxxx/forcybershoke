@@ -1,17 +1,25 @@
+#imports
+
+from http import server
 import random
 from select import select
+from turtle import color
 from unicodedata import decimal
 import disnake
 from disnake.ext import commands
 from disnake.enums import ButtonStyle
 
+import uuid
 
 import datetime
 import asyncio
 import sys
 import time
 
+import random
+
 import sqlite3
+from requests import delete
 from translate import Translator
 from bot_settings import bot_settings
 
@@ -23,15 +31,16 @@ bot.remove_command('help')
 #####################################
 # СПИСОК ID РОЛЕЙ, ГИЛД, БОТ НЕЙМ
 #####################################
-dev_perms = [1000009933875593366, 1000417061928960110]
-high_perms = [1000009933875593366, 1000417061928960110, 1000441438431088640]
-admin_perms = [1000009933875593366, 1000417061928960110, 1000441438431088640, 1000009913155719258]
-support = [1000009933875593366, 1000441438431088640, 1000009913155719258, 1002486676913922058, 1000011043197702185]
-mod_perms = [1000009933875593366, 1000417061928960110, 1000441438431088640, 1000009913155719258, 1000011043197702185]
-db_access = [1000417061928960110]
+dev_perms = [1004312064904413184]
+high_perms = [1004312064904413184, 1004314191953408062]
+admin_perms = [1004312064904413184, 1004314191953408062, 1000009913155719258]
+supportrole = [1002486676913922058]
+mod_perms = [1004312064904413184, 1004314191953408062, 1000009913155719258, 1000011043197702185]
+coder = [1004312064904413184]
+db_access = [1004361054341574697]
 
 
-bot_name = 'My Bot'
+bot_name = 'Sora 👼'
 guild = [1000009791961309194]
 
 ts = time.time()
@@ -64,7 +73,7 @@ bot_message_commands = (
 #####################################
 
 serverthumbnail = 'https://leganerd.com/wp-content/uploads/2021/01/discord-999x604.jpg'
-botversion = '... version: 1.0'
+botversion = 'Ваш любимый бот - Sora 👼 версии 1.0 💗'
 serverauthor = 'server name'
 
 
@@ -89,6 +98,13 @@ async def on_ready():
             mutetime INTEGER,
             temprole TEXT,
             tempRoleTime INTEGER
+    )""")
+        db.commit()
+        c.execute("""CREATE TABLE IF NOT EXISTS families (
+            family_name text,
+            family_id INTEGER PRIMARY KEY,
+            family_leader text,
+            family_counter INTEGER
     )""")
         db.commit()
     db.close()
@@ -134,7 +150,7 @@ async def change_presence(inter, presence, doing):
             adminname = inter.author.nick if (inter.author.nick) else inter.author.name
             if presence == "listen":
                 presencelog = bot.get_channel(1000047444362543164)
-                await presencelog.send(f'{inter.author.mention} сменил мою активность на {presence} с аргументом {doing}')
+                await presencelog.send(f'{inter.author.mention} сменил мою активность на `{presence}` с аргументом `{doing}`')
                 activity = disnake.Activity(type=disnake.ActivityType.listening, name = doing)
                 await bot.change_presence(activity=activity)
                 listenembed = disnake.Embed (
@@ -148,7 +164,7 @@ async def change_presence(inter, presence, doing):
                 return
             elif presence == "watch":
                 presencelog = bot.get_channel(1000047444362543164)
-                await presencelog.send(f'{inter.author.mention} сменил мою активность на {presence} с аргументом {doing}')
+                await presencelog.send(f'{inter.author.mention} сменил мою активность на `{presence}` с аргументом `{doing}`')
                 activity = disnake.Activity(type=disnake.ActivityType.watching, name = doing)
                 await bot.change_presence(activity=activity)
                 watchembed = disnake.Embed (
@@ -162,7 +178,7 @@ async def change_presence(inter, presence, doing):
                 return
             elif presence == "game":
                 presencelog = bot.get_channel(1000047444362543164)
-                await presencelog.send(f'{inter.author.mention} сменил мою активность на {presence} с аргументом {doing}')
+                await presencelog.send(f'{inter.author.mention} сменил мою активность на `{presence}` с аргументом `{doing}`')
                 activity = disnake.Activity(type=disnake.ActivityType.playing, name = doing)
                 await bot.change_presence(activity=activity)
                 gameembed = disnake.Embed (
@@ -176,7 +192,7 @@ async def change_presence(inter, presence, doing):
                 return
             elif presence == "competing":
                 presencelog = bot.get_channel(1000047444362543164)
-                await presencelog.send(f'{inter.author.mention} сменил мою активность на {presence} с аргументом {doing}')
+                await presencelog.send(f'{inter.author.mention} сменил мою активность на `{presence}` с аргументом `{doing}`')
                 activity = disnake.Activity(type=disnake.ActivityType.competing, name = doing)
                 await bot.change_presence(activity=activity)
                 competingembed = disnake.Embed (
@@ -198,7 +214,7 @@ async def change_presence(inter, presence, doing):
 
 @bot.event
 async def on_member_join(user):
-    channel = bot.get_channel(1000009793349619805)
+    channel = bot.get_channel(1004301433031630858)
     joinembed = disnake.Embed (
         title = f"У нас пополнение! Приветствуем {user.name}",
         description = f"Привет, {user.name}. Добро пожаловать на сервер '...', здесь тебя ждет:\n\
@@ -215,10 +231,10 @@ async def on_member_join(user):
         joincheck = c.execute(f"SELECT id FROM members WHERE id = '{user.id}'").fetchone()
         db.commit()
         if joincheck:
-            c.execute(f"UPDATE members SET name = '{user.name}', id = '{user.id}', on_join = on_join, messages = messages, last_update = '{st}', mutetime = mutetime, temprole = 'None', tempRoleTime = '0' WHERE id = '{user.id}'")
+            c.execute(f"UPDATE members SET name = '{user.name}', id = '{user.id}', on_join = on_join, messages = messages, last_update = '{st}', mutetime = mutetime, temprole = 'None', tempRoleTime = '0', is_family_leader = is_family_leader, family_moderator = family_moderator WHERE id = '{user.id}'")
             db.commit()
         elif c.execute(f"SELECT id FROM members WHERE id = '{user.id}'").fetchone() is None:
-            c.execute(f"INSERT INTO members VALUES ('{user.name}', '{user.id}', '{user.joined_at}', '0', '{st}', '0', 'No Role', '0')")
+            c.execute(f"INSERT INTO members VALUES ('{user.name}', '{user.id}', '{user.joined_at}', '0', '{st}', '0', 'No Role', '0', '0', '0', '0')")
             db.commit()
     db.close()
     return
@@ -306,14 +322,14 @@ async def members_db_update(inter, user: disnake.User):
     else:
         await inter.send(f'Уважаемый {inter.author.mention}, к сожалению у вас нет прав на выполнение данной команды.')
 
-# @bot.event
-# async def on_member_update(before, after):
-#     logchannel = bot.get_channel(1001538600523018350)
-#     updateembed = disnake.Embed (
-#         title=f'Пользователь {before.nick} был обновлен.',
-#         description=f'Никнейм:\nБыл: `{before.nick}`\nСтал: `{after.nick}`'
-#     )
-#     await logchannel.send(embed=updateembed)
+@bot.event
+async def on_member_update(before, after):
+    print(after.name, before.id)
+    with sqlite3.connect('glory.db') as db:
+        c = db.cursor()
+        c.execute(f"UPDATE members SET name = '{after.name}' WHERE id = '{before.id}'")
+        db.commit()
+    db.close()
 
 # @bot.command()
 # async def role_users(inter, checkrole: disnake.Role):
@@ -484,6 +500,25 @@ async def on_message(message):
             db.close()
             return
 
+@bot.slash_command(description='Очистить все сообщения участника')
+async def reset_messages(inter, user: disnake.Member):
+    for role in inter.author.roles:
+        if role.id in db_access:
+            await inter.send(f'{inter.author.mention}, подтвердите очистку сообщений участника {user.mention} написав `+`.')
+            response = await bot.wait_for('message')
+            if response.content.lower() not in '+':
+                await inter.send('Вы отказались от обнуления сообщений участника.', delete_after=5)
+                return
+            else:
+                with sqlite3.connect('glory.db') as db:
+                    c = db.cursor()
+                    messages = c.execute(f"""SELECT messages FROM members WHERE id = '{user.id}'""").fetchone()
+                    messages_a = messages[0]
+                    c.execute(f"""UPDATE members SET messages = 0 WHERE id = '{user.id}'""")
+                    db.commit()
+                db.close()
+                await inter.send(f'{inter.author.mention} обнулил сообщения участника. До очистки пользователь имел `{messages_a}` сообщений(-я).')
+
 @bot.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
 async def reset_all_messages(inter):
@@ -491,11 +526,11 @@ async def reset_all_messages(inter):
         if role.id in high_perms:
             try:
                 await inter.send(f'{inter.author.mention}, подтвердите очистку всех сообщений в базе данных, написав: `reset`. (на ответ 10 секунд)')
-                respone = await bot.wait_for('message', timeout=10)
+                response = await bot.wait_for('message', timeout=10)
             except asyncio.TimeoutError:
                 await inter.send(f'{inter.author.mention}, время на подтверждение (10 секунд) вышло.')
                 return
-            if respone.content.lower() not in ('reset'):
+            if response.content.lower() not in ('reset'):
                 await inter.send(f'{inter.author.mention} вы отказались от подтверждения действий.')
                 return
             else:
@@ -511,8 +546,7 @@ async def reset_all_messages(inter):
 async def on_member_remove(user):
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    logchannel = bot.get_channel(1000047279123734648)
-    channel = bot.get_channel(1000009793349619805)
+    channel = bot.get_channel(1004301485607223317)
     with sqlite3.connect('glory.db') as db:
         c = db.cursor()
         getdbmessage = c.execute(f"SELECT messages FROM members WHERE id = '{user.id}'").fetchone()
@@ -531,7 +565,6 @@ async def on_member_remove(user):
     removeembed.set_thumbnail(url=serverthumbnail)
     removeembed.set_image(url='https://i.gifer.com/L9vO.gif')
     await channel.send(embed=removeembed)
-    await logchannel.send(embed=removeembed)
 
 
 
@@ -645,7 +678,7 @@ async def ping(inter):
         return
 
 @bot.slash_command()
-async def clear(inter, amount = 0):
+async def clear(inter, amount):
     for role in inter.author.roles:
         if role.id in mod_perms:
             nickname = inter.author.name if (inter.author.name) else inter.author.nick
@@ -653,11 +686,13 @@ async def clear(inter, amount = 0):
             await inter.channel.purge(limit=int(amount))
 
             clearembed = disnake.Embed (
-                title = f'Очистка сообщений от модератора {nickname}!',
+                title = f'Очистка сообщений 🗑',
                 description = f'Модератор {nickname} очистил в чате {amount} сообщений!',
-                color = disnake.Colour.from_rgb(106, 192, 245)
+                color = disnake.Colour.from_rgb(255, 77, 0)
             )
-            clearembed.set_footer(text='disnake test')
+            clearembed.set_footer(text=botversion)
+            clearembed.set_thumbnail(url=serverthumbnail)
+            
             await inter.send(embed=clearembed, delete_after=5)
             break
     else:
@@ -669,17 +704,23 @@ async def clear_all(inter, amount=10000):
     for role in inter.author.roles:
         if role.id in high_perms:
             nickname = inter.author.name if (inter.author.name) else inter.author.nick
+            await inter.send(f'{inter.author.mention}, подтвердите удаление ВСЕХ сообщений в канале, отправьте: `clear`.')
+            response = await bot.wait_for('message')
+            if response.content.lower() not in 'clear':
+                await inter.send('Вы отказались от удаления ВСЕХ сообщений в этом канале.')
+                return
+            else:
+                await inter.channel.purge(limit=int(amount))
 
-            await inter.channel.purge(limit=int(amount))
-
-            clearembed = disnake.Embed (
-                title = f'Очистка сообщений от модератора {nickname}!',
-                description = f'Модератор {nickname} очистил все сообщения в чате!',
-                color = disnake.Colour.from_rgb(106, 192, 245)
-            )
-            clearembed.set_footer(text='disnake test')
-            await inter.send(embed=clearembed)
-            break
+                clearembed = disnake.Embed (
+                    title = f'Очистка сообщений 🗑',
+                    description = f'Модератор {nickname} очистил все сообщения в чате!',
+                    color = disnake.Colour.from_rgb(255, 77, 0)
+                )      
+                clearembed.set_footer(text=botversion)
+                clearembed.set_thumbnail(url=serverthumbnail)
+                await inter.send(embed=clearembed)
+                break
     else:
         nickname = inter.author.name if (inter.author.name) else inter.author.nick
         await inter.send(f'Уважаемый **{inter.author.mention}**, у вас НЕТ прав на **данную** команду!')
@@ -718,8 +759,9 @@ async def on_message_delete(message):
             db.close()
             return
 
+
 @bot.slash_command()
-async def kick(inter, user: disnake.User, reason = "Причина не указана"):
+async def kick(inter, user: disnake.Member, reason = "Причина не указана"):
     for role in inter.author.roles:
         if role.id in mod_perms:
             if user.top_role >= inter.author.top_role:
@@ -730,12 +772,22 @@ async def kick(inter, user: disnake.User, reason = "Причина не указ
                     await user.kick(reason=reason)
                     kickembed = disnake.Embed (
                         title=f'Участник {user.name} был кикнул с сервера.',
-                        description=f'Модератор {inter.author.mention} исключил с сервера участника {user.id} с причиной: `{reason}`',
+                        description=f'Модератор {inter.author.mention} исключил с сервера участника {user.mention} с причиной: `{reason}`',
                         color=disnake.Color.from_rgb(255, 222, 173)
                     )
                     kickembed.set_thumbnail(url=user.avatar.url)
                     kickembed.set_image(url='https://avatars.mds.yandex.net/i?id=bad11e4abdd060f9ea66566379ef5bf4-3948822-images-thumbs&n=13')
+
+                    userkickembed = disnake.Embed (
+                        title=f'Отчет об исключении с сервера ...',
+                        description=f'Вас исключил модератор {inter.author.name} с ID: {inter.author.id} по причине {reason}.',
+                        color=disnake.Colour.from_rgb(255, 222, 173)
+                    )
+                    userkickembed.set_thumbnail(url=inter.author.avatar.url)
+                    userkickembed.set_image(url='https://avatars.mds.yandex.net/i?id=bad11e4abdd060f9ea66566379ef5bf4-3948822-images-thumbs&n=13')
                     await inter.send(embed=kickembed)
+                    await user.send(embed=userkickembed)
+                    await user.send('Но не расстраивайтесь, вы можете вернутся на сервер по этой ссылке: https://discord.gg/xtaTvXMJGD')
                     return
     else:
         await inter.send(f'{inter.author.mention}, у вас нет прав на данную команду.')
@@ -750,6 +802,63 @@ async def getavatar(inter, user: disnake.Member):
     embed.set_image(user.avatar)
     await inter.send(f'{user.mention}, пользователь {inter.author.mention} ворует вашу аватарку!!!')
     await inter.send(embed=embed)
+
+############### НАДО ДОРАБОТАТЬ ДОБАВЛЕНИЕ СВОЕЙ КАРТИНКИ И ВЫБОР ЦВЕТА
+
+@bot.slash_command()
+async def news(inter):
+    for role in inter.author.roles:
+        if role.id in coder:
+            authornick = inter.author.nick if (inter.author.nick) else inter.author.name
+            channel = bot.get_channel(1003757802017259520)
+            helloembed = disnake.Embed (
+                title=f'Снова делаем новости? Сора тебе поможет!',
+                description=f'Привет, {inter.author.mention}!\n\n\
+                В данном канале можно воспользоваться мной (Сорой) как новостным информатором! Только благодаря мне можно отправить сообщение в канал {channel.mention}.\n\n\
+                Ну что-ж, давай приступим к созданию новости. Когда нибудь во мне появится возможность прям тут задавать цвет для Вебхука, добавлять новые поля, но пока можно задать только описание.',
+                color=disnake.Colour.from_rgb(255, 239, 213)
+            )
+            helloembed.set_author(name='Новостной агент - Сора')
+            helloembed.set_thumbnail(url='https://www.animeclick.it/images/Anime_big/AkiSoraYumenoNaka/AkiSoraYumenoNaka14.jpg')
+            await inter.send(embed=helloembed)
+            await asyncio.sleep(2)
+            await inter.send('Смелей! Напечатай сообщение для описания новостного сообщения и отправь мне его: (`cancel`) - отменить создание новости.')
+            response = await bot.wait_for('message')
+            if response.content.lower() == ('cancel'):
+                await inter.send('Вы отказались от новостного сообщения.')
+                return
+            else:
+                msgembed = disnake.Embed (
+                    title=f'Новостное сообщение от {st}',
+                    description=response.content + '\n---------------------------',
+                    color=disnake.Colour.from_rgb(255, 239, 213)
+                )
+                msgembed.set_author(name=authornick)
+                msgembed.set_thumbnail(url=serverthumbnail)
+                msgembed.set_footer(text=botversion)
+                msgembed.set_image('https://avatars.mds.yandex.net/get-zen_doc/1589334/pub_5d7a19b34e05773c3d0929d0_5d7a19d6118d7f00ae30c29c/scale_1200')
+                await inter.send(embed=msgembed)
+                await inter.send('Вы уверены что хотите отправить это сообщение? [+/-]')
+                approve = await bot.wait_for('message')
+                if approve.content.lower() not in (['+', '-']):
+                    await inter.send('Введите `+` или `-`')
+                    againresponse = await bot.wait_for('message', timeout=60)
+                if approve.content.lower() == '+':
+                    msgembed = disnake.Embed (
+                        title=f'Новостное сообщение от {st}',
+                        description=response.content + '\n\n---------------------------',
+                        color=disnake.Colour.from_rgb(255, 239, 213)
+                    )
+                    msgembed.set_author(name=f'Автор новости: {authornick}')
+                    msgembed.set_thumbnail(url=serverthumbnail)
+                    msgembed.set_footer(text=botversion)
+                    msgembed.set_image('https://avatars.mds.yandex.net/get-zen_doc/1589334/pub_5d7a19b34e05773c3d0929d0_5d7a19d6118d7f00ae30c29c/scale_1200')
+                    channel = bot.get_channel(1003757802017259520)
+                    await channel.send('@everyone советую ознакомится с новым новостным сообщением!', embed=msgembed)
+                    return
+                if approve.content.lower() == '-':
+                    await inter.send('Вы отказались от новостного сообщения.')
+                    return
 
 
 @bot.slash_command(description='Поцеловать пользователя')
@@ -827,49 +936,256 @@ async def temprole(inter, user: disnake.Member, roleget: disnake.Role, time: int
                         db.close()
                         return
 
-######################################################################### TICKETS TICKETS TICKETS TICKETS TICKETS TICKETS TICKETS TICKTES
-# class Ticket(commands.Cog):
+@bot.command()
+async def hello_for(inter, user: disnake.Member):
+    for role in inter.author.roles:
+        if role.id in mod_perms:
+            await inter.send(f'{user.mention}, держи мой теплый, пламенный привет! 🔥💖')
+            break
+    else:
+        await inter.send(f'{inter.author.mention} у вас не хватает прав на передачу привета от моего имени!')
 
-#     @bot.command()
-#     async def startticket(inter):
-#         guild = 1000009791961309194
-#         ticketchannelid = bot.get_channel(1001549637532012665)
-#         button = disnake.ui.View()
-#         button.add_item(disnake.ui.Button(style=disnake.ButtonStyle.green, emoji = '📔'))
-#         await ticketchannelid.send('Нажмите на кнопку для создания тикета.', view=button)
+######################################################################## NEW TRY TICKET SISTEM
 
-#     @bot.event
-#     async def on_message_interaction(inter):
-#         ticketchannelid = bot.get_channel(1001549637532012665)
-#         category = disnake.utils.get(inter.guild.categories, name="активные жалобы")
-#         for ch in category.channels:
-#             if ch.topic == inter.author.id:
-#                 await ticketchannelid.send(f'{inter.author.mention} у вас уже есть тикет, постарайтесь решить оставшийся вопрос в нем.')
-#                 return
-#         else:
-#             support = inter.guild.get_role(1002486676913922058)
-#             everyone = inter.guild.get_role(1000009791961309194)
-#             overwrites = { 
-#                 everyone:disnake.PermissionOverwrite(read_messages=False),
-#                 inter.me:disnake.PermissionOverwrite(read_messages=True),
-#                 inter.author:disnake.PermissionOverwrite(read_messages=True),
-#                 support:disnake.PermissionOverwrite(read_messages=True, send_messages=True)
-#             }
-#             newticket = await category.create_text_channel(name=f'{inter.author.name} ticket.', overwrites=overwrites)
-#             await ticketchannelid.send(f'{inter.author.mention} вы успешно создали тикет!')
-#             return
+# @bot.slash_command(description='Создает тикет. Если хотите подать жалобу на пользователя используйте /s_report')
+# async def new(inter, msg):
+#     if msg is None:
+#         await inter.send('Вы не указали сообщение для тикета.')
+#         return
+#     else:
+#         guild = bot.get_guild(1000009791961309194)
+#         categorychannelticket = disnake.utils.get(inter.guild.categories, name="активные жалобы")
+#         supportrole = inter.guild.get_role(1002486676913922058)
+#         authorrole = inter.author
+#         everyone = inter.guild.get_role(1000009791961309194)
+#         overwrites_for_ticket = {
+#             everyone:disnake.PermissionOverwrite(read_messages=False),
+#             inter.author:disnake.PermissionOverwrite(read_messages=True, send_messages=True),
+#             supportrole:disnake.PermissionOverwrite(read_messages=True, send_messages=True)
+#         }
+#         newticket = await categorychannelticket.create_text_channel(name=f'{inter.author.name} ticket.', overwrites=overwrites_for_ticket)
+#         await inter.send(f'{inter.author.mention} ваш вопрос был передан модерации. Ожидайте ответа в {newticket}')
+#         return
 
-#     @bot.slash_command()
-#     async def close(inter, reason):
-#         support = inter.guild.get_role(1002486676913922058)
-#         for role in inter.author.roles:
-#             if role.id in support:
-#                 overwrite = disnake.PermissionsOverwrite()
-#                 overwrite.send_messages = False
-#                 overwrite.view_channel = False
-#                 await inter.send(f'Тикет был закрыт.')
-#                 await inter.channel.set_permissions(overwrite=overwrite)
-#                 return
+######################################################################### TICKETS TICKETS TICKETS TICKETS TICKETS TICKETS TICKETS TICKETS
+class Ticket(commands.Cog):
 
+    @bot.command()
+    async def tickets(inter):
+        ticketchannelid = bot.get_channel(1003908689549336667)
+        await ticketchannelid.purge(limit=99999999)
+        guild = 1000009791961309194
+        button = disnake.ui.View()
+        button.add_item(disnake.ui.Button(style=disnake.ButtonStyle.green, emoji = '📔'))
+        embed = disnake.Embed (
+            title='Помощник по вопросам - Сора!',
+            description="""Нихао, уважаемый участник!
+            
+            Нужно обратиться за `помощью`? Хочешь отправить на кого-то `жалобу` и имеешь доказательства? Тогда ты обратился точно по адресу!
+            В данном канале ты без проблем можешь создать `"тикет"` для решения своего вопроса.
+            
+            Чтобы создать тикет нажми на зеленую кнопочку снизу, после чего сюда отправится сообщение с упоминанием канала вашего тикета, а в новом канале уже будут привлечены модераторы!""",
+            color=disnake.Colour.from_rgb(220, 20, 60)
+        )
+        embed.set_thumbnail(url=serverthumbnail)
+        embed.set_footer(text=botversion)
+        embed.set_image(url='https://c4.wallpaperflare.com/wallpaper/295/163/719/anime-anime-boys-picture-in-picture-kimetsu-no-yaiba-kamado-tanjir%C5%8D-hd-wallpaper-preview.jpg')
+        await ticketchannelid.send(embed=embed, view=button)
+
+    @bot.event
+    async def on_message_interaction(inter):
+        ticketchannelid = bot.get_channel(1003908689549336667)
+        category = disnake.utils.get(inter.guild.categories, name="активные жалобы")
+        support = inter.guild.get_role(1002486676913922058)
+        everyone = inter.guild.get_role(1000009791961309194)
+        overwrites = { 
+            everyone:disnake.PermissionOverwrite(read_messages=False),
+            inter.me:disnake.PermissionOverwrite(read_messages=True),
+            inter.author:disnake.PermissionOverwrite(read_messages=True),
+            support:disnake.PermissionOverwrite(read_messages=True, send_messages=True)
+            }
+        newticket = await category.create_text_channel(name=f'{inter.author.name} ticket.', overwrites=overwrites)
+        embed = disnake.Embed (
+            title='Спасибо что обратились!',
+            description=f'Уважаемый {inter.author.mention}, вы успешно создали новый тикет, перейдите в {newticket.mention} чтобы продолжить решать свой вопрос.',
+            color=disnake.Colour.from_rgb(220, 20, 60)
+        )
+        embed.set_thumbnail(url=serverthumbnail)
+        embed.set_footer(text=botversion)
+        await inter.send(inter.author.mention, embed=embed, delete_after=10)
+        newticketembed = disnake.Embed (
+            title='Модераторы уже спешат на помощь, а пока...',
+            description="""... постарайтесь изложить свой вопрос максимально четко, если это жалоба то сразу прикрепляйте причину по которой должен быть наказан пользователь а так-же доказательства.
+            
+            Пример неправильного обращения:
+            `Вы тут?`
+            `Когда ответите?`
+            
+            Пример правильного обращения:
+
+            Здравствуйте, пользователь **user** нарушил правило ..., прикрепляю доказательства: **ссылка на доказательства**""",
+            color=disnake.Colour.from_rgb(220, 20, 60)
+        )
+        newticketembed.set_thumbnail(url=inter.author.avatar.url)
+        newticketembed.set_footer(text=botversion)
+        await newticket.send(f'Вопрос для {support.mention}', embed=newticketembed)
+        return
+
+
+
+    @bot.command()
+    async def close(inter: disnake.Interaction, closereason):
+        category = disnake.utils.get(inter.guild.categories, name="активные жалобы")
+        categoryclosed = disnake.utils.get(inter.guild.categories, name="корзина")
+        for role in inter.author.roles:
+            if role.id in high_perms:
+                channel = inter.channel
+                await inter.send(f'Модератор {inter.author.mention} закрыл ваш вопрос с причиной `{closereason}`')
+                await channel.edit(name=f'{channel} closed', sync_permissions=True)
+                await asyncio.sleep(15)
+                await channel.edit(category=categoryclosed)
+                return
+
+userwhoinvite = []
+useranswer = []        
+
+class Families:
+    def str_to_hex(myStr):
+        base16INT = int(myStr, 16)
+        hex_value = hex(base16INT)
+        return int(hex_value,0)
+
+    @bot.slash_command()
+    async def create_family(inter, familyname, colour, leader: disnake.User):
+        for role in inter.author.roles:
+            if role.id in high_perms:
+                guild = inter.guild
+                familyid = uuid.uuid4()
+                def str_to_hex(myStr):
+                    base16INT = int(myStr, 16)
+                    hex_value = hex(base16INT)
+                    return int(hex_value,0)
+                availableColour = str_to_hex(colour)
+                with sqlite3.connect('glory.db') as db:
+                    c = db.cursor()
+                    check = c.execute(f"""SELECT family_name FROM families WHERE family_name = '{familyname}'""").fetchone()
+                    if check:
+                        await inter.send(f'{inter.author.mention}, семья `familyname` уже существует. Для получения информации о ней используйте `/family_info`')
+                        return
+                    else:
+                        familyrole = await guild.create_role(name=familyname, colour=disnake.Colour(availableColour))
+                        await leader.add_roles(familyrole)
+                        c.execute(f"""INSERT INTO families VALUES ('{leader.name}','{leader.id}', '{familyname}', '{familyrole.id}', '{familyid}', '1')""")
+                        c.execute(f"UPDATE members SET is_family_moderate = 1 WHERE id = '{leader.id}'")
+                        db.commit()
+                        embedfamily = disnake.Embed (
+                            title='Вау! У нас новая семья на сервере!',
+                            description=f'Администратор {inter.author.mention} зарегистрировал новую семью которая получила название: `{familyname}`\n\
+                            Лидера: {leader.mention}\n\
+                            Роль: {familyrole.mention}\n\
+                            ID: {familyid}',
+                            color=disnake.Colour.from_rgb(0, 191, 255)
+                        )
+                        embedfamily.set_thumbnail(url=serverthumbnail)
+                        embedfamily.set_image(url='https://rumanga.ru/wp-content/uploads/2019/01/semi-iz-anime22.jpg')
+                        embedfamily.set_footer(text=botversion)
+                        await inter.send(embed=embedfamily)
+                        return
+
+                        
+  
+
+
+    ##### ЗДЕСЬ НУЖНО СДЕЛАТЬ В ДБ КОЛОНКУ ЕЩЕ is_family_leader И ПЕРЕДЕЛАТЬ КОД
+    @bot.slash_command()
+    async def delete_family(inter, family_role: disnake.Role, reason):
+        for role in inter.author.roles:
+            if role.id in high_perms:
+                with sqlite3.connect('glory.db') as db:
+                    c = db.cursor()
+                    take = c.execute(f"DELETE FROM families WHERE family_role = {family_role.id}")
+                    leaderIdFromFamilies = c.execute(f"SELECT family_leader FROM families WHERE family_role = '{family_role.id}'").fetchone()
+                    getleader = leaderIdFromFamilies[0]
+                    c.execute(f"UPDATE members SET is_family_moderate = 0 WHERE id = '{getleader}'")
+                    await family_role.delete(reason=f'Удаление семьи от {inter.author.name}')
+                    db.commit()
+                    deleteembed = disnake.Embed (
+                        title='Удаление семьи с нашего сервер :(',
+                        description=f'Администратор {inter.author.mention} удалил семью `{family_role.name}` с причиной `{reason}`!',
+                        color=disnake.Colour.from_rgb(0, 191, 255)
+                    )
+                db.close()
+                await inter.send(embed=deleteembed)
+                return
+    
+
+
+###### ЗДЕСЬ НУЖНО СДЕЛАТЬ ВЫБОР СЕМЬИ ЕСЛИ МОДЕР БОЛЬШЕ ЧЕМ В 1 СЕМЬЕ
+    @bot.command()
+    async def family_invite(inter, user: disnake.Member):
+        with sqlite3.connect('glory.db') as db:
+            c = db.cursor()
+            check = c.execute(f"SELECT family_leader FROM families WHERE family_leader = '{inter.author.id}'").fetchone()
+            db.commit()
+            if check is None:
+                await inter.send('Вы не лидер семьи')
+                return
+            else:
+                familyrolemention = c.execute(f"SELECT family_role FROM families WHERE family_leader = '{inter.author.id}'").fetchone()
+                familyrolelist = familyrolemention[0]
+                global familyroleformention
+                familyroleformention = inter.guild.get_role(familyrolelist)
+                await inter.send(f'{user.mention}, вы были приглашены в семью {familyroleformention.mention} лидером {inter.author.mention}\n\
+                В течении 10 секунд ответьте `sora.accept` чтобы принять приглашение, в ином случае: `sora.decline`.')
+                userinvited = user.id
+                userwhoinvite.append(userinvited)
+                await asyncio.sleep(10)
+                await inter.send(f'{user.mention}, время на принятие решения вышло. Если вы не успели принять приглашение, попросите его еще раз.')
+                userwhoinvite.clear()
+
+
+    @bot.command()
+    async def accept(inter):
+        for user in userwhoinvite:
+            if inter.author.id in userwhoinvite:
+                await inter.author.add_roles(familyroleformention)
+                await inter.send(f'{inter.author.mention}, вы присоединились к семье {familyroleformention.mention}')
+                return
+
+    @bot.command()
+    async def decline(inter):
+        for user in userwhoinvite:
+            if inter.author.id in userwhoinvite:
+                await inter.send(f'{inter.author.mention}, вы октазались от вступления в семью {familyroleformention.mention}')
+                return
+
+    @bot.slash_command(description='Выгнать из семьи')
+    async def family_kick(inter, user: disnake.Member):
+        with sqlite3.connect('glory.db') as db:
+            c = db.cursor()
+            check = c.execute(f"SELECT is_family_moderate FROM members WHERE id = '{inter.author.id}'").fetchone()
+            if check:
+                familyrole = c.execute(f"SELECT family_role FROM families WHERE family_leader = '{inter.author.id}'").fetchone() 
+                familyroleformention = familyrole[0]
+                roleforremove = inter.guild.get_role(familyroleformention)
+                await inter.send(f'{user.mention} вы были исключены из семьи {roleforremove.mention} лидером/заместителем {inter.author.mention}')
+                await user.remove_roles(roleforremove)
+                return
+            else:
+                await inter.send(f'{inter.author.mention} вы не являетесь лидером/заместителем какой либо семьи.')
+                return
+
+
+    @bot.command()
+    async def droptable(inter):
+        for role in inter.author.roles:
+            if role.id in dev_perms:
+                await inter.send('done')
+                with sqlite3.connect('glory.db') as db:
+                    c = db.cursor()
+                    c.execute("DELETE FROM families")
+                    db.commit()
+                db.close()
+                return
 
 bot.run(bot_settings['TOKEN'])
